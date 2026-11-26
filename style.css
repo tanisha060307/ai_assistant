@@ -62,3 +62,13 @@ button:hover{
     background-color: #bfe446;
     
 }
+button:disabled,
+button.listening{
+    cursor: wait;
+    background-color: #368f61;
+}
+#status{
+    min-height: 1.2em;
+    margin-top: 12px;
+    margin-bottom: 0;
+}

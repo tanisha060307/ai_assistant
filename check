@@ -1,0 +1,76 @@
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+const btn = document.querySelector("#btn");
+
+function speak(text) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utterance);
+    return utterance;
+}
+
+function openSite(url, label) {
+    const newTab = window.open(url, "_blank");
+    if (!newTab) {
+        speak("Please allow pop-ups for this page to open a new tab.");
+        return;
+    }
+
+    speak(`Opening ${label}...`);
+}
+
+function handleCommands(command) {
+    const normalizedCommand = command.toLowerCase().replace(/\s+/g, " ").trim();
+    recognition.stop();
+
+    if (normalizedCommand.includes("open youtube") || normalizedCommand.includes("open you tube")) {
+        openSite("https://www.youtube.com", "YouTube");
+    } else if (normalizedCommand.includes("open whatsapp") || normalizedCommand.includes("open whats app")) {
+        openSite("https://web.whatsapp.com", "WhatsApp");
+    } else if (normalizedCommand.includes("open facebook")) {
+        openSite("https://www.facebook.com", "Facebook");
+    } else if (normalizedCommand.includes("open instagram")) {
+        openSite("https://www.instagram.com", "Instagram");
+    } else if (normalizedCommand === "open google") {
+        openSite("https://www.google.com", "Google");
+    } else {
+        const searchQuery = command.trim();
+        openSite(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, "Google search");
+    }
+}
+
+if (recognition) {
+    recognition.lang = "en-US";
+    recognition.addEventListener("result", (event) => {
+        const result = event.results[event.resultIndex];
+        if (result && result.isFinal) {
+            handleCommands(result[0].transcript);
+        }
+    });
+    recognition.addEventListener("end", () => {
+        btn.disabled = false;
+    });
+    recognition.addEventListener("error", (event) => {
+        btn.disabled = false;
+        console.error("Speech recognition error:", event.error);
+    });
+}
+
+btn.addEventListener("click", () => {
+    if (!recognition) {
+        console.error("Speech recognition is not supported by this browser.");
+        speak("Speech recognition is not supported by this browser.");
+        return;
+    }
+
+    btn.disabled = true;
+    const greeting = speak("Hello, how can I help you?");
+    greeting.addEventListener("end", () => {
+        try {
+            recognition.start();
+        } catch (error) {
+            btn.disabled = false;
+            console.error("Could not start speech recognition:", error);
+        }
+    });
+});
